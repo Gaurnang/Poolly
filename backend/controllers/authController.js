@@ -39,12 +39,18 @@ export const registerUser = async (req, res) => {
         });
 
         if (user) {
+            const token = generateToken(user._id);
+            res.cookie('token', token, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'strict',
+                maxAge: 7 * 24 * 60 * 60 * 1000
+            });
             res.status(201).json({
                 _id: user._id,
                 username: user.username,
                 fullName: user.fullName,
                 email: user.email,
-                token: generateToken(user._id)
             });
         } else {
             res.status(400).json({ message: 'Invalid user data' });
@@ -71,8 +77,15 @@ export const loginUser = async (req, res) => {
         const totalPollsVotes = await Poll.countDocuments({ voters: user._id });
         const totalPollsBooked = user.booksmarkedpolls?.length || 0;
 
+        const token = generateToken(user._id);
+        res.cookie('token', token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+            maxAge: 7 * 24 * 60 * 60 * 1000
+        });
+
         res.status(200).json({
-            token: generateToken(user._id),
             user: {
                 ...user.toObject(),
                 password: undefined,
