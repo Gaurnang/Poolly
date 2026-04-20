@@ -2,8 +2,6 @@ import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
-import path from 'path';
-import { fileURLToPath } from 'url';
 import connectDB from './config/db.js';
 import authRoutes from './routes/authRoutes.js';
 import pollRoutes from './routes/pollRoutes.js';
@@ -49,16 +47,6 @@ connectDB();
 
 app.use('/api/auth', authRoutes);
 app.use('/api/polls', pollRoutes);
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-app.use(express.static(path.join(__dirname, '../frontend/dist')));
-
-// Express v5 does NOT support wildcard `*` in app.get() — use app.use() as fallback
-app.use((req, res) => {
-    res.sendFile(path.resolve(__dirname, '../frontend', 'dist', 'index.html'));
-});
 
 const PORT = process.env.PORT || 8000;
 app.listen(PORT, () => {
