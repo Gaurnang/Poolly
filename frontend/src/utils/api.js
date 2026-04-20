@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const API = axios.create({
-  baseURL: '/api',
+  baseURL: 'https://poolly.onrender.com/api',
   withCredentials: true,
 });
 
