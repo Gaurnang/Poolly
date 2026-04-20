@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { BarChart3, PlusCircle, TrendingUp, CheckSquare, Bookmark, Zap } from 'lucide-react';
+import { BarChart3, PlusCircle, CheckSquare, Bookmark, Zap, LogIn } from 'lucide-react';
 import { useUser } from '../context/UserContext';
 import { getAllPolls } from '../utils/api';
 import FilterByPollType from '../components/polls/FilterByPollType';
@@ -106,7 +106,8 @@ export default function DashboardPage() {
     return () => observerRef.current?.disconnect();
   }, [hasMore, loading, activeType, fetchPolls]);
 
-  const firstName = user?.username ?? 'there';
+  const isGuest = !user;
+  const firstName = user?.username ?? 'Explorer';
 
   return (
     <div className="fade-up">
@@ -129,62 +130,78 @@ export default function DashboardPage() {
             <span style={{ fontSize: '0.75rem', color: '#a78bfa', fontWeight: 600 }}>Community Feed</span>
           </div>
           <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#e8edf8', letterSpacing: '-0.02em' }}>
-            Hey, {firstName} 👋
+            {isGuest ? 'Welcome to Poolly 🗳️' : `Hey, ${firstName} 👋`}
           </h1>
           <p style={{ fontSize: '0.875rem', color: '#8899b8', marginTop: '4px' }}>
-            Discover and participate in trending polls
+            {isGuest
+              ? 'Browse community polls — sign up to vote & create your own'
+              : 'Discover and participate in trending polls'}
           </p>
         </div>
-        <Link
-          to="/create-poll"
-          id="dashboard-create-poll"
-          className="btn btn-primary"
-          style={{ padding: '11px 20px', borderRadius: '10px', fontSize: '0.875rem' }}
-        >
-          <PlusCircle size={16} />
-          <span className="hidden sm:inline">Create Poll</span>
-        </Link>
+        {isGuest ? (
+          <Link
+            to="/login"
+            id="dashboard-login-cta"
+            className="btn btn-primary"
+            style={{ padding: '11px 20px', borderRadius: '10px', fontSize: '0.875rem' }}
+          >
+            <LogIn size={16} />
+            <span className="hidden sm:inline">Log In to Vote</span>
+          </Link>
+        ) : (
+          <Link
+            to="/create-poll"
+            id="dashboard-create-poll"
+            className="btn btn-primary"
+            style={{ padding: '11px 20px', borderRadius: '10px', fontSize: '0.875rem' }}
+          >
+            <PlusCircle size={16} />
+            <span className="hidden sm:inline">Create Poll</span>
+          </Link>
+        )}
       </div>
 
-      {/* Stats row */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '14px', marginBottom: '28px' }}>
-        {STAT_THEMES.map(({ key, label, icon: Icon, gradient, glow, text, bg, border }) => (
-          <div
-            key={key}
-            style={{
-              background: 'rgba(15,22,45,0.7)',
-              border: `1px solid ${border}`,
-              borderRadius: '14px',
-              padding: '20px',
-              backdropFilter: 'blur(20px)',
-              transition: 'all 0.3s ease',
-              cursor: 'default',
-            }}
-            onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = `0 12px 30px ${glow}`; }}
-            onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'none'; }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <div
-                style={{
-                  width: '40px', height: '40px', borderRadius: '10px',
-                  background: gradient,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  boxShadow: `0 4px 12px ${glow}`,
-                  flexShrink: 0,
-                }}
-              >
-                <Icon size={18} color="white" />
-              </div>
-              <div>
-                <p style={{ fontSize: '1.5rem', fontWeight: 800, color: text, lineHeight: 1 }}>
-                  {user?.[key] ?? 0}
-                </p>
-                <p style={{ fontSize: '0.75rem', color: '#8899b8', marginTop: '3px' }}>{label}</p>
+      {/* Stats row — only for logged-in users */}
+      {!isGuest && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '14px', marginBottom: '28px' }}>
+          {STAT_THEMES.map(({ key, label, icon: Icon, gradient, glow, text, bg, border }) => (
+            <div
+              key={key}
+              style={{
+                background: 'rgba(15,22,45,0.7)',
+                border: `1px solid ${border}`,
+                borderRadius: '14px',
+                padding: '20px',
+                backdropFilter: 'blur(20px)',
+                transition: 'all 0.3s ease',
+                cursor: 'default',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = `0 12px 30px ${glow}`; }}
+              onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'none'; }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div
+                  style={{
+                    width: '40px', height: '40px', borderRadius: '10px',
+                    background: gradient,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    boxShadow: `0 4px 12px ${glow}`,
+                    flexShrink: 0,
+                  }}
+                >
+                  <Icon size={18} color="white" />
+                </div>
+                <div>
+                  <p style={{ fontSize: '1.5rem', fontWeight: 800, color: text, lineHeight: 1 }}>
+                    {user?.[key] ?? 0}
+                  </p>
+                  <p style={{ fontSize: '0.75rem', color: '#8899b8', marginTop: '3px' }}>{label}</p>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
       {/* Main layout */}
       <div style={{ display: 'block' }}>

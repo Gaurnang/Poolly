@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 
+// Requires a valid auth token — rejects unauthenticated requests
 export const protect = async (req, res, next) => {
     const token = req.cookies?.token;
 
@@ -21,3 +22,17 @@ export const protect = async (req, res, next) => {
     }
 };
 
+// Attaches req.user if a valid token is present, but never blocks the request
+export const optionalAuth = async (req, res, next) => {
+    const token = req.cookies?.token;
+    if (token) {
+        try {
+            const decoded = jwt.verify(token, process.env.JWT_SECRET);
+            req.user = await User.findById(decoded.id).select('-password');
+        } catch {
+            // Invalid token — treat as guest, don't block
+            req.user = null;
+        }
+    }
+    next();
+};

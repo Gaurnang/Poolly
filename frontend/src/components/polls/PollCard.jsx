@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Bookmark, Share2, Lock, CheckCircle, BarChart3, Star, MessageSquare, Users, BarChart2 } from 'lucide-react';
+import { Bookmark, Share2, Lock, CheckCircle, BarChart3, Star, MessageSquare, Users, BarChart2, LogIn } from 'lucide-react';
 import { useUser } from '../../context/UserContext';
 import { toggleBookmark, voteOnPoll, getUser } from '../../utils/api';
 import toast from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
 import PollContent from './PollContent';
 import PollResultContent from './PollResultContent';
 
@@ -15,11 +16,34 @@ const TYPE_THEMES = {
 
 export default function PollCard({ poll: initialPoll, onUpdate }) {
   const { user, updateUser } = useUser();
+  const navigate = useNavigate();
   const [poll, setPoll] = useState(initialPoll);
   const [bookmarked, setBookmarked] = useState(user?.booksmarkedpolls?.includes(poll._id));
   const [showResults, setShowResults] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [bookmarking, setBookmarking] = useState(false);
+
+  const requireAuth = (action) => {
+    if (!user) {
+      toast(
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <LogIn size={16} color="#a78bfa" style={{ flexShrink: 0 }} />
+          <span>
+            <strong style={{ color: '#e8edf8' }}>Login required</strong>
+            <br />
+            <span style={{ fontSize: '0.8rem', color: '#8899b8' }}>
+              Please{' '}
+              <a href="/login" style={{ color: '#a78bfa', fontWeight: 600 }}>log in</a>
+              {' '}to {action}.
+            </span>
+          </span>
+        </div>,
+        { duration: 3000, style: { background: '#0f1623', border: '1px solid rgba(124,58,237,0.25)', color: '#e8edf8' } }
+      );
+      return false;
+    }
+    return true;
+  };
 
   useEffect(() => {
     setBookmarked(user?.booksmarkedpolls?.includes(poll._id));
@@ -34,16 +58,15 @@ export default function PollCard({ poll: initialPoll, onUpdate }) {
   });
 
   const handleBookmark = async () => {
+    if (!requireAuth('bookmark polls')) return;
     setBookmarking(true);
     try {
       const res = await toggleBookmark(poll._id);
       setBookmarked(res.data.bookmarked);
-      if (user) {
-        const updatedBookmarks = res.data.bookmarked
-          ? [...(user.booksmarkedpolls || []), poll._id]
-          : (user.booksmarkedpolls || []).filter(id => id !== poll._id);
-        updateUser({ ...user, booksmarkedpolls: updatedBookmarks });
-      }
+      const updatedBookmarks = res.data.bookmarked
+        ? [...(user.booksmarkedpolls || []), poll._id]
+        : (user.booksmarkedpolls || []).filter(id => id !== poll._id);
+      updateUser({ ...user, booksmarkedpolls: updatedBookmarks });
       toast.success(res.data.message);
     } catch {
       toast.error('Failed to update bookmark');
@@ -53,6 +76,7 @@ export default function PollCard({ poll: initialPoll, onUpdate }) {
   };
 
   const handleVote = async (voteData) => {
+    if (!requireAuth('vote on polls')) return;
     setSubmitting(true);
     try {
       const res = await voteOnPoll(poll._id, voteData);
@@ -73,6 +97,7 @@ export default function PollCard({ poll: initialPoll, onUpdate }) {
   // - voted OR showResults → results
   // - closed + not voted → show "View Results" prompt (no voting allowed)
   // - open + not voted → show voting form
+  // Guests can always see the voting UI but will be prompted to log in on submit
   const showVoting = !hasVoted && !showResults && !poll.isClosed;
   const showResultsView = hasVoted || showResults;
   const showClosedPrompt = poll.isClosed && !hasVoted && !showResults;
@@ -132,12 +157,14 @@ export default function PollCard({ poll: initialPoll, onUpdate }) {
             id={`bookmark-${poll._id}`}
             onClick={handleBookmark}
             disabled={bookmarking}
+            title={!user ? 'Log in to bookmark' : bookmarked ? 'Remove bookmark' : 'Bookmark'}
             style={{
               padding: '6px', borderRadius: '8px',
               background: bookmarked ? 'rgba(124,58,237,0.15)' : 'transparent',
               border: bookmarked ? '1px solid rgba(124,58,237,0.3)' : '1px solid transparent',
               color: bookmarked ? '#a78bfa' : '#4d607e',
               cursor: 'pointer', transition: 'all 0.2s ease',
+              opacity: !user ? 0.5 : 1,
             }}
             onMouseEnter={e => { if (!bookmarked) { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = '#8899b8'; }}}
             onMouseLeave={e => { if (!bookmarked) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#4d607e'; }}}

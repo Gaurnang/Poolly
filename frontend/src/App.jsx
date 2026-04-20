@@ -16,6 +16,13 @@ const ProtectedRoute = ({ children }) => {
   return user ? children : <Navigate to="/login" replace />;
 };
 
+// Layout accessible by anyone; only child routes may be protected
+const PublicLayout = () => {
+  const { loading } = useUser();
+  if (loading) return <LoadingSpinner fullscreen />;
+  return <DashboardLayout />;
+};
+
 const GuestRoute = ({ children }) => {
   const { user, loading } = useUser();
   if (loading) return <LoadingSpinner fullscreen />;
@@ -33,15 +40,14 @@ const AppRoutes = () => (
       path="/signup"
       element={<GuestRoute><SignupPage /></GuestRoute>}
     />
-    <Route
-      path="/"
-      element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}
-    >
+    <Route path="/" element={<PublicLayout />}>
+      {/* Public — anyone can browse */}
       <Route path="dashboard" element={<DashboardPage />} />
-      <Route path="create-poll" element={<CreatePollPage />} />
-      <Route path="my-polls" element={<MyPollsPage />} />
-      <Route path="voted-polls" element={<VotedPollsPage />} />
-      <Route path="bookmarked" element={<BookmarkedPollsPage />} />
+      {/* Protected — must be logged in */}
+      <Route path="create-poll" element={<ProtectedRoute><CreatePollPage /></ProtectedRoute>} />
+      <Route path="my-polls" element={<ProtectedRoute><MyPollsPage /></ProtectedRoute>} />
+      <Route path="voted-polls" element={<ProtectedRoute><VotedPollsPage /></ProtectedRoute>} />
+      <Route path="bookmarked" element={<ProtectedRoute><BookmarkedPollsPage /></ProtectedRoute>} />
     </Route>
   </Routes>
 );

@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { BarChart3, Bell, Search, LogOut, ChevronDown, AtSign, Check, X } from 'lucide-react';
+import { BarChart3, LogOut, ChevronDown, AtSign, Check, X, LogIn, UserPlus } from 'lucide-react';
 import { useUser } from '../../context/UserContext';
 import { logoutUser, updateUsername } from '../../utils/api';
 import toast from 'react-hot-toast';
@@ -78,7 +78,7 @@ export default function Navbar() {
           borderBottom: '1px solid rgba(255,255,255,0.05)',
         }}
       >
-        {/* Left: mobile logo + search */}
+        {/* Left: mobile logo */}
         <div className="flex items-center gap-4">
           <div className="flex lg:hidden items-center gap-2">
             <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'linear-gradient(135deg, #7c3aed, #2563eb)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -90,90 +90,138 @@ export default function Navbar() {
 
         {/* Right */}
         <div className="flex items-center gap-2">
-       
-          {/* User dropdown */}
-          <div ref={dropdownRef} style={{ position: 'relative' }}>
-            <button
-              id="navbar-user-menu"
-              onClick={() => setShowDropdown(!showDropdown)}
-              className="flex items-center gap-2.5"
-              style={{
-                background: 'rgba(255,255,255,0.04)',
-                border: '1px solid rgba(255,255,255,0.08)',
-                borderRadius: '12px', padding: '6px 12px 6px 6px',
-                cursor: 'pointer', transition: 'all 0.2s ease',
-              }}
-              onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(124,58,237,0.3)'}
-              onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'}
-            >
-              <div style={{ width: '30px', height: '30px', borderRadius: '8px', background: 'linear-gradient(135deg, #7c3aed 0%, #2563eb 100%)', fontSize: '0.75rem', fontWeight: 800, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                {initials}
-              </div>
-              <div className="hidden sm:block text-left">
-                <p style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#e8edf8', lineHeight: 1.2 }}>@{user?.username}</p>
-                <p style={{ fontSize: '0.7rem', color: '#4d607e', marginTop: '1px' }}>{user?.email}</p>
-              </div>
-              <ChevronDown size={14} style={{ color: '#4d607e', transition: 'transform 0.2s ease', transform: showDropdown ? 'rotate(180deg)' : 'none' }} />
-            </button>
-
-            {showDropdown && (
-              <div
-                className="fade-in"
+          {user ? (
+            /* ── Authenticated: show user dropdown ── */
+            <div ref={dropdownRef} style={{ position: 'relative' }}>
+              <button
+                id="navbar-user-menu"
+                onClick={() => setShowDropdown(!showDropdown)}
+                className="flex items-center gap-2.5"
                 style={{
-                  position: 'absolute', right: 0, top: 'calc(100% + 8px)',
-                  width: '220px', background: '#0f1623',
-                  border: '1px solid rgba(255,255,255,0.08)', borderRadius: '14px',
-                  overflow: 'hidden', boxShadow: '0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(124,58,237,0.1)', zIndex: 50,
+                  background: 'rgba(255,255,255,0.04)',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  borderRadius: '12px', padding: '6px 12px 6px 6px',
+                  cursor: 'pointer', transition: 'all 0.2s ease',
                 }}
+                onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(124,58,237,0.3)'}
+                onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'}
               >
-                <div style={{ padding: '14px 16px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                  <p style={{ fontSize: '0.875rem', fontWeight: 700, color: '#e8edf8' }}>@{user?.username}</p>
-                  <p style={{ fontSize: '0.75rem', color: '#4d607e', marginTop: '2px' }}>{user?.email}</p>
+                <div style={{ width: '30px', height: '30px', borderRadius: '8px', background: 'linear-gradient(135deg, #7c3aed 0%, #2563eb 100%)', fontSize: '0.75rem', fontWeight: 800, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  {initials}
                 </div>
-                <div style={{ padding: '6px' }}>
-                  {/* Change username */}
-                  <button
-                    id="navbar-change-username"
-                    onClick={openUsernameModal}
-                    className="w-full flex items-center gap-3"
-                    style={{
-                      padding: '10px 12px', borderRadius: '8px',
-                      fontSize: '0.875rem', color: '#8899b8',
-                      background: 'transparent', border: 'none', cursor: 'pointer',
-                      transition: 'background 0.2s', textAlign: 'left', fontWeight: 500,
-                    }}
-                    onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = '#e8edf8'; }}
-                    onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#8899b8'; }}
-                  >
-                    <AtSign size={15} />
-                    Change Username
-                  </button>
+                <div className="hidden sm:block text-left">
+                  <p style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#e8edf8', lineHeight: 1.2 }}>@{user?.username}</p>
+                  <p style={{ fontSize: '0.7rem', color: '#4d607e', marginTop: '1px' }}>{user?.email}</p>
+                </div>
+                <ChevronDown size={14} style={{ color: '#4d607e', transition: 'transform 0.2s ease', transform: showDropdown ? 'rotate(180deg)' : 'none' }} />
+              </button>
 
-                  {/* Logout */}
-                  <button
-                    id="navbar-logout"
-                    onClick={handleLogout}
-                    className="w-full flex items-center gap-3"
-                    style={{
-                      padding: '10px 12px', borderRadius: '8px',
-                      fontSize: '0.875rem', color: '#f87171',
-                      background: 'transparent', border: 'none', cursor: 'pointer',
-                      transition: 'background 0.2s', textAlign: 'left', fontWeight: 500,
-                    }}
-                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(239,68,68,0.08)'}
-                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                  >
-                    <LogOut size={15} />
-                    Sign Out
-                  </button>
+              {showDropdown && (
+                <div
+                  className="fade-in"
+                  style={{
+                    position: 'absolute', right: 0, top: 'calc(100% + 8px)',
+                    width: '220px', background: '#0f1623',
+                    border: '1px solid rgba(255,255,255,0.08)', borderRadius: '14px',
+                    overflow: 'hidden', boxShadow: '0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(124,58,237,0.1)', zIndex: 50,
+                  }}
+                >
+                  <div style={{ padding: '14px 16px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                    <p style={{ fontSize: '0.875rem', fontWeight: 700, color: '#e8edf8' }}>@{user?.username}</p>
+                    <p style={{ fontSize: '0.75rem', color: '#4d607e', marginTop: '2px' }}>{user?.email}</p>
+                  </div>
+                  <div style={{ padding: '6px' }}>
+                    {/* Change username */}
+                    <button
+                      id="navbar-change-username"
+                      onClick={openUsernameModal}
+                      className="w-full flex items-center gap-3"
+                      style={{
+                        padding: '10px 12px', borderRadius: '8px',
+                        fontSize: '0.875rem', color: '#8899b8',
+                        background: 'transparent', border: 'none', cursor: 'pointer',
+                        transition: 'background 0.2s', textAlign: 'left', fontWeight: 500,
+                      }}
+                      onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = '#e8edf8'; }}
+                      onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#8899b8'; }}
+                    >
+                      <AtSign size={15} />
+                      Change Username
+                    </button>
+
+                    {/* Logout */}
+                    <button
+                      id="navbar-logout"
+                      onClick={handleLogout}
+                      className="w-full flex items-center gap-3"
+                      style={{
+                        padding: '10px 12px', borderRadius: '8px',
+                        fontSize: '0.875rem', color: '#f87171',
+                        background: 'transparent', border: 'none', cursor: 'pointer',
+                        transition: 'background 0.2s', textAlign: 'left', fontWeight: 500,
+                      }}
+                      onMouseEnter={e => e.currentTarget.style.background = 'rgba(239,68,68,0.08)'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                    >
+                      <LogOut size={15} />
+                      Sign Out
+                    </button>
+                  </div>
                 </div>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
+          ) : (
+            /* ── Guest: show Login + Sign Up buttons ── */
+            <div className="flex items-center gap-2">
+              <Link
+                id="navbar-login"
+                to="/login"
+                className="flex items-center gap-2"
+                style={{
+                  padding: '7px 16px',
+                  borderRadius: '10px',
+                  fontSize: '0.875rem',
+                  fontWeight: 600,
+                  color: '#8899b8',
+                  background: 'transparent',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  textDecoration: 'none',
+                  transition: 'all 0.2s ease',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(124,58,237,0.35)'; e.currentTarget.style.color = '#e8edf8'; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; e.currentTarget.style.color = '#8899b8'; }}
+              >
+                <LogIn size={15} />
+                <span className="hidden sm:inline">Log In</span>
+              </Link>
+              <Link
+                id="navbar-signup"
+                to="/signup"
+                className="flex items-center gap-2"
+                style={{
+                  padding: '7px 16px',
+                  borderRadius: '10px',
+                  fontSize: '0.875rem',
+                  fontWeight: 600,
+                  color: '#fff',
+                  background: 'linear-gradient(135deg, #7c3aed 0%, #2563eb 100%)',
+                  border: '1px solid transparent',
+                  textDecoration: 'none',
+                  transition: 'all 0.2s ease',
+                  boxShadow: '0 4px 12px rgba(124,58,237,0.3)',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 6px 20px rgba(124,58,237,0.45)'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
+                onMouseLeave={e => { e.currentTarget.style.boxShadow = '0 4px 12px rgba(124,58,237,0.3)'; e.currentTarget.style.transform = 'none'; }}
+              >
+                <UserPlus size={15} />
+                <span className="hidden sm:inline">Sign Up</span>
+              </Link>
+            </div>
+          )}
         </div>
       </header>
 
-      {/* Change Username Modal */}
+      {/* Change Username Modal — only for logged-in users */}
       {showUsernameModal && (
         <div
           className="fade-in"
