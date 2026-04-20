@@ -13,13 +13,26 @@ dotenv.config();
 
 const app = express();
 
+// Build origin whitelist from env + known local dev ports
+const ALLOWED_ORIGINS = [
+    'http://localhost:5173',
+    'http://localhost:5174',
+    'http://localhost:3000',
+];
+if (process.env.CLIENT_URL) {
+    ALLOWED_ORIGINS.push(process.env.CLIENT_URL);
+}
+
 app.use(cors({
-    origin: [
-        process.env.CLIENT_URL || 'http://localhost:5173',
-        'http://localhost:5173',
-        'http://localhost:5174',
-    ],
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+    origin: (origin, callback) => {
+        // Allow requests with no origin (e.g. mobile apps, curl, Postman)
+        if (!origin) return callback(null, true);
+        if (ALLOWED_ORIGINS.includes(origin)) {
+            return callback(null, true);
+        }
+        return callback(new Error(`CORS: origin ${origin} not allowed`));
+    },
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,
 }));
